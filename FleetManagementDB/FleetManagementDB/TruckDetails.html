@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    
+    <script src="Scripts/jquery-2.2.1.min.js"></script>
+    <script src="Scripts/angular.min.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
+    <link href="Style/Style.css" rel="stylesheet" />
+    <link href="Content/bootstrap.css" rel="stylesheet" />
+    <link href="Style/dashboard.css" rel="stylesheet">
+
+</head>
+<body>
+
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Fleet Management</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Settings</a></li>
+                    <li><a href="#">Profile</a></li>
+                    <li><a href="#">Help</a></li>
+                </ul>
+
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-3 col-md-2 sidebar">
+                <ul class="nav nav-sidebar">
+                    <li class="active"><a href="#">Home <span class="sr-only">(current)</span></a></li>
+                    <li><a href="#">Reports</a></li>
+                    <li><a href="#">Analytics</a></li>
+                    <li><a href="#">Export</a></li>
+                </ul>
+            </div>
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+                <div id="truckID"></div>
+                <canvas id="Canvas" width="1181" height="297"></canvas>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <script>
+        var Trucks = [
+            {
+                EngineTemp: '68',
+                TyrePressure1: '70',
+                TyrePressure2: '72'
+            }
+        ]
+        var Position = {
+            EngineTempX: 120,
+            EngineTempY: 120,
+            TyrePressure1X: 245,
+            TyrePressure1Y: 181,
+            TyrePressure2X: 509,
+            TyrePressure2Y: 181
+        }
+        var canvas = document.getElementById('Canvas');
+        var context = canvas.getContext("2d");
+
+        // Map sprite
+        var mapSprite = new Image();
+        mapSprite.src = "Images/TruckNew.png";
+
+        var Marker = function () {
+            
+            this.Sprite = new Image();
+            this.Sprite.src = "Images/Marker1.png"
+            this.Width = 12;
+            this.Height = 20;
+            this.XPos = 0;
+            this.YPos = 0;
+            this.desc = "";
+        }
+
+        var Markers = new Array();
+        function getPosition(item) {
+            var retdata = {};
+
+            if (item !== null) {
+                retdata.X = Position[item + "X"];
+                retdata.Y = Position[item + "Y"];
+            }
+            return retdata;
+        }
+        var createMarkers = function (info) {
+                  
+            //Create MArkers for each property
+            //Get position from position table:Currently hard coded
+
+            //Marker for Engine Temperature
+            var marker = new Marker();
+            var markPos = getPosition("EngineTemp");
+            marker.XPos = markPos.X;
+            marker.YPos = markPos.Y;
+            marker.desc = "Temperature :" +info.EngineTemp;
+            Markers.push(marker);
+
+            //Marker for Tyre1 Pressure
+            var marker = new Marker();
+            var markPos = getPosition("TyrePressure1");
+            marker.XPos = markPos.X;
+            marker.YPos = markPos.Y;
+            marker.desc = "Pressure :"+info.TyrePressure1;
+            Markers.push(marker);
+
+            //Marker for Tyre2 Pressure
+            var marker = new Marker();
+            var markPos = getPosition("TyrePressure2");
+            marker.XPos = markPos.X;
+            marker.YPos = markPos.Y;
+            marker.desc = "Pressure :"+info.TyrePressure2;
+            Markers.push(marker);
+
+
+        }
+        //var mouseClicked = function (mouse) {
+        //    // Get corrent mouse coords
+        //    var rect = canvas.getBoundingClientRect();
+        //    var mouseXPos = (mouse.x - rect.left);
+        //    var mouseYPos = (mouse.y - rect.top);
+
+        //    console.log("Marker added");
+
+
+        //    var marker = new Marker();
+        //    marker.XPos = mouseXPos - (marker.Width / 2);
+        //    marker.YPos = mouseYPos - marker.Height;
+
+        //    Markers.push(marker);
+        //}
+
+      
+        
+
+        var firstLoad = function () {
+            context.font = "15px Georgia";
+            context.textAlign = "center";
+            
+        }
+
+        firstLoad();
+
+        var main = function () {
+            draw();
+        };
+
+        var draw = function () {
+            // Clear Canvas
+            context.fillStyle = "#000";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+           
+            context.drawImage(mapSprite, 0, 0,1181, 297);
+
+            // Draw markers
+            for (var i = 0; i < Markers.length; i++) {
+                var tempMarker = Markers[i];
+                // Draw marker
+                context.drawImage(tempMarker.Sprite, tempMarker.XPos, tempMarker.YPos, tempMarker.Width, tempMarker.Height);
+
+                // Calculate postion text
+                var markerText = tempMarker.desc;
+
+                // Draw a simple box so you can see the position
+                var textMeasurements = context.measureText(markerText);
+                context.fillStyle = "#666";
+                context.globalAlpha = 0.7;
+                context.fillRect(tempMarker.XPos - (textMeasurements.width / 2), tempMarker.YPos - 15, textMeasurements.width, 20);
+                context.globalAlpha = 1;
+
+                // Draw position above
+                context.fillStyle = "yellow";
+                context.fillText(markerText, tempMarker.XPos, tempMarker.YPos);
+            }
+        };
+        //TruckData
+        var retrievedObject = localStorage.getItem('TruckData');
+        var parsedObject=JSON.parse(retrievedObject)
+        createMarkers(parsedObject);
+        var div = document.getElementById('truckID');
+        var dText = parsedObject.truckid;
+        div.innerHTML = div.innerHTML + '#' + dText;
+        
+        //draw();
+        setInterval(main, (1000 / 60));
+    </script>
+</body>
+</html>
